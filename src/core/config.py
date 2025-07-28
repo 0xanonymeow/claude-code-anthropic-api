@@ -165,8 +165,7 @@ class Settings(BaseSettings):
     @classmethod
     def validate_allow_origins(cls, v: List[str]) -> List[str]:
         """Validate CORS origins list."""
-        if not v:
-            raise ValueError("allow_origins cannot be empty")
+        # Empty list is allowed for production (no CORS)
         return v
     
     @field_validator("allow_methods")

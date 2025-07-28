@@ -43,14 +43,14 @@ from ..models.anthropic import (
     MessageStopEvent,
 )
 from .config import Settings
-from ..utils.logging import get_logger, log_claude_sdk_error, log_function_call
+from ..utils.loguru_utils import LoguruLogger
 from ..utils.error_handling import (
     create_service_unavailable_error,
     create_invalid_model_error
 )
 
 
-logger = get_logger(__name__)
+logger = LoguruLogger(__name__)
 
 
 class ClaudeClient:
@@ -496,10 +496,13 @@ class ClaudeClient:
                 'error_type': e.__class__.__name__
             })
             
-            log_claude_sdk_error(logger, "create_message", e, {
-                'model': request.model,
-                'request_id': getattr(request, 'id', 'unknown')
-            })
+            logger.error(
+                f"Claude SDK Error in create_message: {str(e)}",
+                operation="create_message",
+                error_type=e.__class__.__name__,
+                model=request.model,
+                request_id=getattr(request, 'id', 'unknown')
+            )
             
             error_response = self._map_claude_error_to_anthropic(e)
             raise Exception(error_response.error.message) from e
@@ -672,11 +675,14 @@ class ClaudeClient:
                 'streaming': True
             })
             
-            log_claude_sdk_error(logger, "create_message_stream", e, {
-                'model': request.model,
-                'message_id': message_id,
-                'streaming': True
-            })
+            logger.error(
+                f"Claude SDK Error in create_message_stream: {str(e)}",
+                operation="create_message_stream",
+                error_type=e.__class__.__name__,
+                model=request.model,
+                message_id=message_id,
+                streaming=True
+            )
             
             # Send error event in stream
             error_response = self._map_claude_error_to_anthropic(e)
