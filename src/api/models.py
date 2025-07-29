@@ -6,7 +6,6 @@ available Claude Code models in Anthropic-compatible format.
 """
 
 import logging
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -26,8 +25,8 @@ async def list_models(
     List available models.
 
     Returns information about available Claude Code models in Anthropic-compatible format.
-    This endpoint provides model IDs, display names, and capabilities that can be used
-    with the /v1/messages endpoint.
+    This endpoint provides model IDs, display names, and capabilities that can
+    be used with the /v1/messages endpoint.
 
     Args:
         claude_client: Claude Code SDK client instance
