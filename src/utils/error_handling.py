@@ -336,7 +336,7 @@ class ErrorHandler:
         )
         
         return JSONResponse(
-            status_code=HTTPStatusCode.BAD_REQUEST.value,
+            status_code=422,  # UNPROCESSABLE_ENTITY - standard for validation errors
             content=error_response.model_dump()
         )
 
