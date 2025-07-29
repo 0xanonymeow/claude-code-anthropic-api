@@ -11,26 +11,25 @@ import time
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
-from .core.config import get_settings, configure_logging
-from .core.claude_client import get_claude_client, close_claude_client
 from .api.messages import router as messages_router
 from .api.models import router as models_router
-from .models.anthropic import ErrorResponse, AnthropicError, ErrorType
+from .core.claude_client import close_claude_client, get_claude_client
+from .core.config import configure_logging, get_settings
+from .models.anthropic import AnthropicError, ErrorResponse, ErrorType
 from .utils.error_handling import ErrorHandler, ErrorMapper
 from .utils.loguru_utils import (
     LoguruLogger,
     RequestContextMiddleware,
     log_health_check,
     log_request_validation_error,
-    request_id_var
+    request_id_var,
 )
-
 
 # Configure logging before creating the app
 settings = get_settings()
@@ -93,6 +92,7 @@ app = FastAPI(
 
 # Add path prefix middleware (before other middleware)
 from .middleware.path_prefix import PathPrefixMiddleware
+
 app.add_middleware(PathPrefixMiddleware)
 
 # Add request context middleware for tracking
@@ -354,7 +354,7 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     # Run the server with suppressed uvicorn logs
     uvicorn.run(
         "src.main:app",

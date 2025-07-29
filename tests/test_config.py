@@ -13,7 +13,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from src.core.config import Settings, get_settings, reload_settings, configure_logging
+from src.core.config import Settings, configure_logging, get_settings, reload_settings
 
 
 class TestSettings:

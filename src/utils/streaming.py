@@ -6,23 +6,23 @@ that match Anthropic's streaming specification, including proper SSE formatting,
 connection management, and error handling.
 """
 
-import json
 import asyncio
-from typing import AsyncGenerator, Dict, Any, Optional, Union
+import json
 from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator, Dict, Optional, Union
 
 from ..models.anthropic import (
-    StreamEvent,
-    MessageStartEvent,
-    ContentBlockStartEvent,
+    AnthropicError,
     ContentBlockDeltaEvent,
+    ContentBlockStartEvent,
     ContentBlockStopEvent,
+    ErrorResponse,
+    ErrorType,
     MessageDeltaEvent,
+    MessageStartEvent,
     MessageStopEvent,
     PingEvent,
-    ErrorResponse,
-    AnthropicError,
-    ErrorType
+    StreamEvent,
 )
 
 
@@ -251,8 +251,8 @@ class ClaudeSDKStreamAdapter:
         self.content_block_index = 0
         
         # Send message start event
-        from ..models.anthropic import MessageResponse, ContentBlock, ContentType, Usage
-        
+        from ..models.anthropic import ContentBlock, ContentType, MessageResponse, Usage
+
         # Create initial response with placeholder content that will be updated
         initial_content = ContentBlock(type=ContentType.TEXT, text=" ")
         initial_response = MessageResponse(

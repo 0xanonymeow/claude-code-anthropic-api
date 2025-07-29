@@ -6,9 +6,10 @@ for the /v1/messages endpoint, including request/response models, content blocks
 and error handling models.
 """
 
-from typing import Any, Dict, List, Literal, Optional, Union
-from pydantic import BaseModel, Field, field_validator, model_validator
 from enum import Enum
+from typing import Any, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class ContentType(str, Enum):
@@ -38,7 +39,7 @@ class ImageSource(BaseModel):
 
     @field_validator("media_type")
     @classmethod
-    def validate_media_type(cls, v):
+    def validate_media_type(cls, v: str) -> str:
         """Validate that media type is a supported image format."""
         allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
         if v not in allowed_types:
@@ -53,7 +54,7 @@ class ContentBlock(BaseModel):
     source: Optional[ImageSource] = Field(None, description="Image source (required for image blocks)")
 
     @model_validator(mode='after')
-    def validate_content_block(self):
+    def validate_content_block(self) -> 'ContentBlock':
         """Ensure content block has appropriate fields for its type."""
         if self.type == ContentType.TEXT:
             if not self.text:
@@ -76,10 +77,10 @@ class Message(BaseModel):
 
     @field_validator("content", mode='before')
     @classmethod
-    def validate_content(cls, v):
+    def validate_content(cls, v: Union[str, List[ContentBlock]]) -> List[ContentBlock]:
         """Convert string content to ContentBlock list if needed."""
         if isinstance(v, str):
-            return [ContentBlock(type=ContentType.TEXT, text=v)]
+            return [ContentBlock(type=ContentType.TEXT, text=v, source=None)]
         return v
 
 
@@ -108,7 +109,7 @@ class MessageRequest(BaseModel):
     
     @field_validator("system", mode='before')
     @classmethod
-    def validate_system(cls, v):
+    def validate_system(cls, v: Any) -> Optional[str]:
         """Validate and normalize system parameter to handle both string and content block formats."""
         if v is None or v == "":
             return None
@@ -134,7 +135,7 @@ class MessageRequest(BaseModel):
 
     @field_validator("messages")
     @classmethod
-    def validate_messages(cls, v):
+    def validate_messages(cls, v: List[Message]) -> List[Message]:
         """Validate message sequence follows conversation rules."""
         if not v:
             raise ValueError("Messages list cannot be empty")
@@ -155,7 +156,7 @@ class MessageRequest(BaseModel):
 
     @field_validator("stop_sequences")
     @classmethod
-    def validate_stop_sequences(cls, v):
+    def validate_stop_sequences(cls, v: Optional[List[str]]) -> Optional[List[str]]:
         """Validate stop sequences."""
         if v is not None:
             for seq in v:
@@ -177,7 +178,7 @@ class MessageResponse(BaseModel):
 
     @field_validator("content")
     @classmethod
-    def validate_content_not_empty(cls, v):
+    def validate_content_not_empty(cls, v: List[ContentBlock]) -> List[ContentBlock]:
         """Ensure response has content."""
         if not v:
             raise ValueError("Response content cannot be empty")

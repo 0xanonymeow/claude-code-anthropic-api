@@ -22,33 +22,32 @@ from claude_code_sdk._errors import (
 from claude_code_sdk.types import ClaudeCodeOptions
 
 from ..models.anthropic import (
+    AnthropicError,
+    ContentBlock,
+    ContentBlockDeltaEvent,
+    ContentBlockStartEvent,
+    ContentBlockStopEvent,
+    ContentType,
+    ErrorResponse,
+    ErrorType,
+    Message,
+    MessageDeltaEvent,
     MessageRequest,
     MessageResponse,
-    Message,
-    ContentBlock,
-    ContentType,
     MessageRole,
-    StopReason,
-    Usage,
-    Model,
-    AnthropicError,
-    ErrorType,
-    ErrorResponse,
-    StreamEvent,
     MessageStartEvent,
-    ContentBlockStartEvent,
-    ContentBlockDeltaEvent,
-    ContentBlockStopEvent,
-    MessageDeltaEvent,
     MessageStopEvent,
+    Model,
+    StopReason,
+    StreamEvent,
+    Usage,
 )
-from .config import Settings
-from ..utils.loguru_utils import LoguruLogger
 from ..utils.error_handling import (
+    create_invalid_model_error,
     create_service_unavailable_error,
-    create_invalid_model_error
 )
-
+from ..utils.loguru_utils import LoguruLogger
+from .config import Settings
 
 logger = LoguruLogger(__name__)
 
@@ -130,6 +129,8 @@ class ClaudeClient:
         return {
             "claude-sonnet-4-20250514": "claude-sonnet-4-20250514",
             "claude-opus-4-20250514": "claude-opus-4-20250514",
+            "claude-3-5-sonnet-20241022": "claude-3-5-sonnet-20241022",
+            "claude-3-haiku-20240307": "claude-3-haiku-20240307",
         }
     
     def _map_anthropic_to_claude_model(self, anthropic_model: str) -> str:
@@ -350,6 +351,8 @@ class ClaudeClient:
         
         return MessageResponse(
             id=message_id,
+            type="message",
+            role="assistant",
             content=content_blocks,
             model=original_request.model,  # Return original Anthropic model ID
             stop_reason=stop_reason,
@@ -556,8 +559,12 @@ class ClaudeClient:
             # Send message start event
             initial_response = MessageResponse(
                 id=message_id,
-                content=[ContentBlock(type=ContentType.TEXT, text=" ")],
+                type="message",
+                role="assistant",
+                content=[ContentBlock(type=ContentType.TEXT, text=" ", source=None)],
                 model=request.model,
+                stop_reason=None,
+                stop_sequence=None,
                 usage=Usage(input_tokens=input_tokens, output_tokens=0)
             )
             event = MessageStartEvent(message=initial_response)
@@ -569,7 +576,7 @@ class ClaudeClient:
             })
             
             # Send content block start event
-            content_block = ContentBlock(type=ContentType.TEXT, text=" ")
+            content_block = ContentBlock(type=ContentType.TEXT, text=" ", source=None)
             event = ContentBlockStartEvent(index=0, content_block=content_block)
             yield f"event: content_block_start\ndata: {event.model_dump_json()}\n\n"
             
@@ -716,6 +723,7 @@ class ClaudeClient:
             for anthropic_id, claude_id in self._model_mapping.items():
                 model = Model(
                     id=anthropic_id,
+                    type="model",
                     display_name=anthropic_id.replace("-", " ").title(),
                     created_at=None  # Claude Code SDK might not provide this
                 )

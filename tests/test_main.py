@@ -5,14 +5,15 @@ This module tests the main application setup, middleware, exception handlers,
 and core endpoints to ensure proper functionality.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from fastapi.testclient import TestClient
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from src.main import app
-from src.models.anthropic import ErrorResponse, AnthropicError, ErrorType
+from src.models.anthropic import AnthropicError, ErrorResponse, ErrorType
 
 
 class TestMainApplication:

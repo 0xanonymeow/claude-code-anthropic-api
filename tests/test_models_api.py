@@ -5,14 +5,15 @@ Tests the models API endpoint functionality including model listing,
 individual model retrieval, error handling, and Claude Code SDK integration.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
-from src.api.models import router, list_models, get_model
-from src.models.anthropic import Model, ModelsResponse
+from src.api.models import get_model, list_models, router
 from src.core.claude_client import ClaudeClient, get_claude_client
+from src.models.anthropic import Model, ModelsResponse
 
 
 class TestModelsAPI:

@@ -10,8 +10,8 @@ import sys
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
-from pydantic import Field, field_validator, ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     
     # Server Configuration
     host: str = Field(
-        default="0.0.0.0",
+        default="127.0.0.1",
         description="Host address to bind the server to"
     )
     port: int = Field(
@@ -37,11 +37,11 @@ class Settings(BaseSettings):
         description="Port number to bind the server to"
     )
     debug: bool = Field(
-        default=False,
+        default=True,
         description="Enable debug mode"
     )
     reload: bool = Field(
-        default=False,
+        default=True,
         description="Enable auto-reload for development"
     )
     
@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     
     # Logging Configuration
     log_level: str = Field(
-        default="WARNING",
+        default="INFO",
         description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
     )
     log_format: str = Field(
@@ -78,22 +78,27 @@ class Settings(BaseSettings):
         default=None,
         description="Path to log file (if None, logs to stdout)"
     )
+    log_max_size: int = Field(
+        default=10485760,  # 10MB
+        ge=1024,
+        description="Maximum log file size in bytes"
+    )
     
     # CORS Configuration
     allow_origins: List[str] = Field(
-        default=[],
+        default=["*"],
         description="List of allowed origins for CORS (empty = no CORS)"
     )
     allow_credentials: bool = Field(
-        default=False,
+        default=True,
         description="Allow credentials in CORS requests"
     )
     allow_methods: List[str] = Field(
-        default=["GET", "POST"],
+        default=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         description="List of allowed HTTP methods for CORS"
     )
     allow_headers: List[str] = Field(
-        default=["Content-Type", "Authorization"],
+        default=["*"],
         description="List of allowed headers for CORS"
     )
     
@@ -103,11 +108,11 @@ class Settings(BaseSettings):
         description="API title for OpenAPI documentation"
     )
     api_description: str = Field(
-        default="HTTP server that provides Anthropic API compatibility for Claude Code SDK",
+        default="FastAPI server that provides Anthropic API compatibility for Claude Code SDK",
         description="API description for OpenAPI documentation"
     )
     api_version: str = Field(
-        default="0.1.0",
+        default="1.0.0",
         description="API version"
     )
     
@@ -133,7 +138,7 @@ class Settings(BaseSettings):
         description="Enable metrics endpoint"
     )
     
-    model_config = ConfigDict(
+    model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
@@ -165,7 +170,9 @@ class Settings(BaseSettings):
     @classmethod
     def validate_allow_origins(cls, v: List[str]) -> List[str]:
         """Validate CORS origins list."""
-        # Empty list is allowed for production (no CORS)
+        # Empty list should raise error for development safety
+        if isinstance(v, list) and len(v) == 0:
+            raise ValueError("CORS origins list cannot be empty")
         return v
     
     @field_validator("allow_methods")
@@ -268,6 +275,20 @@ class Settings(BaseSettings):
             "allow_headers": self.allow_headers
         }
     
+    def get_logging_config(self) -> Dict[str, Any]:
+        """
+        Get logging configuration dictionary.
+        
+        Returns:
+            Dict containing logging configuration
+        """
+        return {
+            "level": self.log_level,
+            "format": self.log_format,
+            "file": self.log_file,
+            "max_size": self.log_max_size
+        }
+    
     def get_claude_code_config(self) -> Dict[str, Any]:
         """
         Get Claude Code SDK configuration dictionary.
@@ -337,7 +358,7 @@ def configure_logging(settings: Optional[Settings] = None) -> None:
     
     # Completely silence third-party loggers for clean output
     import logging
-    
+
     # Set all third-party loggers to CRITICAL to silence them
     for logger_name in ["uvicorn", "uvicorn.access", "uvicorn.error", "fastapi", "httpx", "multipart"]:
         logging.getLogger(logger_name).setLevel(logging.CRITICAL)

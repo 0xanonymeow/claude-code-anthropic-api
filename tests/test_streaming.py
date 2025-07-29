@@ -5,35 +5,36 @@ Tests cover SSE formatting, stream management, Claude SDK adaptation,
 error handling, and connection management functionality.
 """
 
-import pytest
-import json
 import asyncio
-from typing import AsyncGenerator, Dict, Any
+import json
+from typing import Any, AsyncGenerator, Dict
 from unittest.mock import AsyncMock, MagicMock
 
-from src.utils.streaming import (
-    SSEFormatter,
-    StreamManager,
-    ClaudeSDKStreamAdapter,
-    create_sse_stream,
-    adapt_claude_to_sse
-)
+import pytest
+
 from src.models.anthropic import (
-    StreamEvent,
-    MessageStartEvent,
-    ContentBlockStartEvent,
+    AnthropicError,
+    ContentBlock,
     ContentBlockDeltaEvent,
+    ContentBlockStartEvent,
     ContentBlockStopEvent,
+    ContentType,
+    ErrorResponse,
+    ErrorType,
     MessageDeltaEvent,
+    MessageResponse,
+    MessageStartEvent,
     MessageStopEvent,
     PingEvent,
-    ErrorResponse,
-    AnthropicError,
-    ErrorType,
-    MessageResponse,
-    ContentBlock,
-    ContentType,
-    Usage
+    StreamEvent,
+    Usage,
+)
+from src.utils.streaming import (
+    ClaudeSDKStreamAdapter,
+    SSEFormatter,
+    StreamManager,
+    adapt_claude_to_sse,
+    create_sse_stream,
 )
 
 

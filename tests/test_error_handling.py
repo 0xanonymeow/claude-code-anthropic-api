@@ -5,23 +5,24 @@ This module tests the centralized error handling system including error mapping,
 HTTP status code mapping, and Anthropic-compatible error response generation.
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from src.models.anthropic import AnthropicError, ErrorResponse, ErrorType
 from src.utils.error_handling import (
-    ErrorMapper,
-    ErrorHandler,
-    HTTPStatusCode,
     ErrorCategory,
+    ErrorHandler,
+    ErrorMapper,
+    HTTPStatusCode,
+    create_invalid_model_error,
     create_not_found_error,
     create_rate_limit_error,
     create_service_unavailable_error,
-    create_invalid_model_error
 )
-from src.models.anthropic import ErrorType, ErrorResponse, AnthropicError
 
 
 class TestErrorMapper:

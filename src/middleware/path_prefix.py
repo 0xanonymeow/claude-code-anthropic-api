@@ -1,11 +1,11 @@
 """Path prefix handling middleware for API endpoints"""
 
 import logging
+from typing import Awaitable, Callable
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from typing import Callable, Awaitable
-
 
 logger = logging.getLogger(__name__)
 

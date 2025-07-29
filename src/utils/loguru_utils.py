@@ -14,7 +14,6 @@ from typing import Any, Dict, Optional, Union
 from fastapi import Request, Response
 from loguru import logger
 
-
 # Context variables for request tracking
 request_id_var: ContextVar[Optional[str]] = ContextVar('request_id', default=None)
 user_id_var: ContextVar[Optional[str]] = ContextVar('user_id', default=None)
@@ -123,7 +122,7 @@ class LoguruLogger:
         self.debug(f"Started {operation}", operation=operation, timer_id=timer_id)
         return timer_id
     
-    def stop_timer(self, timer_id: str, operation: str, **kwargs) -> float:
+    def stop_timer(self, timer_id: str, operation: str, extra_data: Optional[Dict[str, Any]] = None) -> float:
         """Stop a timer and log the duration."""
         if timer_id not in self._start_times:
             self.warning(f"Timer not found: {timer_id}")
@@ -131,13 +130,15 @@ class LoguruLogger:
         
         duration = time.time() - self._start_times.pop(timer_id)
         
-        self.info(
-            f"Completed {operation}",
-            operation=operation,
-            timer_id=timer_id,
-            duration_seconds=duration,
-            **kwargs
-        )
+        data = {
+            "operation": operation,
+            "timer_id": timer_id,
+            "duration_seconds": duration,
+        }
+        if extra_data:
+            data.update(extra_data)
+        
+        self.info(f"Completed {operation}", **data)
         
         return duration
     
@@ -165,23 +166,31 @@ class LoguruLogger:
             **kwargs
         )
     
-    def log_claude_sdk_request(self, operation: str, model: str, **kwargs) -> None:
+    def log_claude_sdk_request(self, operation: str, model: str, extra_data: Optional[Dict[str, Any]] = None) -> None:
         """Log Claude SDK request."""
-        self.info(f"Claude SDK: {operation}", operation=operation, model=model, **kwargs)
+        data = {"operation": operation, "model": model}
+        if extra_data:
+            data.update(extra_data)
+        self.info(f"Claude SDK: {operation}", **data)
     
-    def log_claude_sdk_response(self, operation: str, model: str, duration: float, success: bool = True, **kwargs) -> None:
+    def log_claude_sdk_response(self, operation: str, model: str, duration: float, success: bool = True, extra_data: Optional[Dict[str, Any]] = None) -> None:
         """Log Claude SDK response."""
         level = "INFO" if success else "ERROR"
         status = "completed" if success else "failed"
         
+        data = {
+            "operation": operation,
+            "model": model,
+            "duration_seconds": duration,
+            "success": success,
+        }
+        if extra_data:
+            data.update(extra_data)
+        
         self._log(
             level,
             f"Claude SDK {operation} {status}",
-            operation=operation,
-            model=model,
-            duration_seconds=duration,
-            success=success,
-            **kwargs
+            **data
         )
     
     def log_performance_metric(self, metric_name: str, value: Union[int, float], unit: str = "", **kwargs) -> None:
@@ -193,6 +202,14 @@ class LoguruLogger:
             metric_unit=unit,
             **kwargs
         )
+    
+    def log_streaming_event(self, event_type: str, message_id: str, extra_data: Optional[Dict[str, Any]] = None) -> None:
+        """Log streaming event."""
+        data = {"event_type": event_type, "message_id": message_id}
+        if extra_data:
+            data.update(extra_data)
+        
+        self.debug(f"Streaming event: {event_type}", **data)
 
 
 # Utility functions for common logging scenarios

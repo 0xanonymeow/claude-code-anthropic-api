@@ -7,19 +7,14 @@ error mapping utilities, HTTP status code mapping, and structured error logging.
 
 import logging
 import traceback
-from typing import Any, Dict, Optional, Type, Union
 from enum import Enum
+from typing import Any, Dict, Optional, Type, Union
 
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from ..models.anthropic import (
-    ErrorResponse,
-    AnthropicError,
-    ErrorType
-)
-
+from ..models.anthropic import AnthropicError, ErrorResponse, ErrorType
 
 logger = logging.getLogger(__name__)
 

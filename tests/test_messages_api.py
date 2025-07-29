@@ -7,27 +7,27 @@ and Anthropic API compatibility verification.
 """
 
 import json
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi.testclient import TestClient
+
+import pytest
 from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from src.api.messages import router
+from src.core.claude_client import ClaudeClient
 from src.models.anthropic import (
-    MessageRequest,
-    MessageResponse,
-    Message,
+    AnthropicError,
     ContentBlock,
     ContentType,
-    MessageRole,
-    Usage,
-    Model,
     ErrorResponse,
-    AnthropicError,
     ErrorType,
+    Message,
+    MessageRequest,
+    MessageResponse,
+    MessageRole,
+    Model,
+    Usage,
 )
-from src.core.claude_client import ClaudeClient
-
 
 # Create test app
 app = FastAPI()

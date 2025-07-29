@@ -5,32 +5,33 @@ Tests model validation, serialization, and edge cases to ensure
 compatibility with Anthropic's API specification.
 """
 
-import pytest
-from pydantic import ValidationError
 from typing import List
 
+import pytest
+from pydantic import ValidationError
+
 from src.models.anthropic import (
+    AnthropicError,
+    ContentBlock,
+    ContentBlockDeltaEvent,
+    ContentBlockStartEvent,
+    ContentBlockStopEvent,
+    ContentType,
+    ErrorResponse,
+    ErrorType,
+    ImageSource,
+    Message,
+    MessageDeltaEvent,
     MessageRequest,
     MessageResponse,
-    Message,
-    ContentBlock,
-    Usage,
-    ImageSource,
-    AnthropicError,
-    ErrorResponse,
+    MessageRole,
+    MessageStartEvent,
+    MessageStopEvent,
     Model,
     ModelsResponse,
-    ContentType,
-    MessageRole,
-    StopReason,
-    ErrorType,
-    MessageStartEvent,
-    ContentBlockStartEvent,
-    ContentBlockDeltaEvent,
-    ContentBlockStopEvent,
-    MessageDeltaEvent,
-    MessageStopEvent,
     PingEvent,
+    StopReason,
+    Usage,
 )
 
 

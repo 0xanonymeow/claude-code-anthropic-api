@@ -6,27 +6,11 @@ including mocked Claude Code SDK responses, request/response transformation,
 error handling, and model management functionality.
 """
 
-import pytest
 import uuid
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List
 
-from src.core.claude_client import ClaudeClient, get_claude_client, close_claude_client
-from src.core.config import Settings
-from src.models.anthropic import (
-    MessageRequest,
-    MessageResponse,
-    Message,
-    ContentBlock,
-    ContentType,
-    MessageRole,
-    StopReason,
-    Usage,
-    Model,
-    ErrorResponse,
-    ErrorType,
-    AnthropicError,
-)
+import pytest
 
 # Import Claude SDK errors for testing
 from claude_code_sdk import ClaudeSDKError
@@ -35,6 +19,23 @@ from claude_code_sdk._errors import (
     CLIJSONDecodeError,
     CLINotFoundError,
     ProcessError,
+)
+
+from src.core.claude_client import ClaudeClient, close_claude_client, get_claude_client
+from src.core.config import Settings
+from src.models.anthropic import (
+    AnthropicError,
+    ContentBlock,
+    ContentType,
+    ErrorResponse,
+    ErrorType,
+    Message,
+    MessageRequest,
+    MessageResponse,
+    MessageRole,
+    Model,
+    StopReason,
+    Usage,
 )
 
 
