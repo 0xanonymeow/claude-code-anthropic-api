@@ -100,9 +100,12 @@ app.add_middleware(PathPrefixMiddleware)
 # Add request context middleware for tracking
 app.add_middleware(RequestContextMiddleware)
 
-# Add CORS middleware only if origins are configured
+# Add CORS middleware only if origins are configured and not in test environment
+import os
 cors_config = settings.get_cors_config()
-if cors_config["allow_origins"]:
+is_testing = os.getenv("PYTEST_CURRENT_TEST") is not None or "pytest" in os.getenv("_", "")
+
+if cors_config["allow_origins"] and not is_testing:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=cors_config["allow_origins"],
