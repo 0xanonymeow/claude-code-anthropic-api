@@ -32,28 +32,28 @@ class TestModelsAPI:
             Model(
                 id="claude-3-5-sonnet-20241022",
                 display_name="Claude 3.5 Sonnet",
-                created_at="2024-10-22T00:00:00Z"
+                created_at="2024-10-22T00:00:00Z",
             ),
             Model(
                 id="claude-3-5-haiku-20241022",
                 display_name="Claude 3.5 Haiku",
-                created_at="2024-10-22T00:00:00Z"
+                created_at="2024-10-22T00:00:00Z",
             ),
             Model(
                 id="claude-3-opus-20240229",
                 display_name="Claude 3 Opus",
-                created_at="2024-02-29T00:00:00Z"
+                created_at="2024-02-29T00:00:00Z",
             ),
             Model(
                 id="claude-sonnet-4-20250514",
                 display_name="Claude 3 Sonnet",
-                created_at="2024-02-29T00:00:00Z"
+                created_at="2024-02-29T00:00:00Z",
             ),
             Model(
                 id="claude-3-haiku-20240307",
                 display_name="Claude 3 Haiku",
-                created_at="2024-03-07T00:00:00Z"
-            )
+                created_at="2024-03-07T00:00:00Z",
+            ),
         ]
 
     @pytest.mark.asyncio
@@ -61,10 +61,10 @@ class TestModelsAPI:
         """Test successful model listing."""
         # Setup mock
         mock_claude_client.get_available_models.return_value = sample_models
-        
+
         # Call the endpoint
         response = await list_models(claude_client=mock_claude_client)
-        
+
         # Verify response
         assert isinstance(response, ModelsResponse)
         assert len(response.data) == 5
@@ -72,7 +72,7 @@ class TestModelsAPI:
         assert response.has_more is False
         assert response.first_id == "claude-3-5-sonnet-20241022"
         assert response.last_id == "claude-3-haiku-20240307"
-        
+
         # Verify client was called
         mock_claude_client.get_available_models.assert_called_once()
 
@@ -81,10 +81,10 @@ class TestModelsAPI:
         """Test model listing with empty model list."""
         # Setup mock to return empty list
         mock_claude_client.get_available_models.return_value = []
-        
+
         # Call the endpoint
         response = await list_models(claude_client=mock_claude_client)
-        
+
         # Verify response
         assert isinstance(response, ModelsResponse)
         assert len(response.data) == 0
@@ -99,16 +99,16 @@ class TestModelsAPI:
             Model(
                 id="claude-sonnet-4-20250514",
                 display_name="Claude 3 Sonnet",
-                created_at="2024-02-29T00:00:00Z"
+                created_at="2024-02-29T00:00:00Z",
             )
         ]
-        
+
         # Setup mock
         mock_claude_client.get_available_models.return_value = single_model
-        
+
         # Call the endpoint
         response = await list_models(claude_client=mock_claude_client)
-        
+
         # Verify response
         assert isinstance(response, ModelsResponse)
         assert len(response.data) == 1
@@ -121,35 +121,40 @@ class TestModelsAPI:
     async def test_list_models_claude_client_error(self, mock_claude_client):
         """Test model listing when Claude client raises an error."""
         # Setup mock to raise exception
-        mock_claude_client.get_available_models.side_effect = Exception("Claude Code SDK connection failed")
-        
+        mock_claude_client.get_available_models.side_effect = Exception(
+            "Claude Code SDK connection failed"
+        )
+
         # Call the endpoint and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
             await list_models(claude_client=mock_claude_client)
-        
+
         # Verify exception details
         assert exc_info.value.status_code == 500
         assert exc_info.value.detail["type"] == "error"
         assert exc_info.value.detail["error"]["type"] == "api_error"
         assert "Failed to retrieve models" in exc_info.value.detail["error"]["message"]
-        assert "Claude Code SDK connection failed" in exc_info.value.detail["error"]["message"]
+        assert (
+            "Claude Code SDK connection failed"
+            in exc_info.value.detail["error"]["message"]
+        )
 
     @pytest.mark.asyncio
     async def test_get_model_success(self, mock_claude_client, sample_models):
         """Test successful individual model retrieval."""
         # Setup mock
         mock_claude_client.get_available_models.return_value = sample_models
-        
+
         # Call the endpoint
         model_id = "claude-sonnet-4-20250514"
         response = await get_model(model_id=model_id, claude_client=mock_claude_client)
-        
+
         # Verify response
         assert isinstance(response, Model)
         assert response.id == model_id
         assert response.display_name == "Claude 3 Sonnet"
         assert response.created_at == "2024-02-29T00:00:00Z"
-        
+
         # Verify client was called
         mock_claude_client.get_available_models.assert_called_once()
 
@@ -158,29 +163,31 @@ class TestModelsAPI:
         """Test individual model retrieval for non-existent model."""
         # Setup mock
         mock_claude_client.get_available_models.return_value = sample_models
-        
+
         # Call the endpoint with non-existent model ID
         model_id = "non-existent-model"
         with pytest.raises(HTTPException) as exc_info:
             await get_model(model_id=model_id, claude_client=mock_claude_client)
-        
+
         # Verify exception details
         assert exc_info.value.status_code == 404
         assert exc_info.value.detail["type"] == "error"
         assert exc_info.value.detail["error"]["type"] == "not_found_error"
-        assert f"Model '{model_id}' not found" in exc_info.value.detail["error"]["message"]
+        assert (
+            f"Model '{model_id}' not found" in exc_info.value.detail["error"]["message"]
+        )
 
     @pytest.mark.asyncio
     async def test_get_model_empty_list(self, mock_claude_client):
         """Test individual model retrieval when no models are available."""
         # Setup mock to return empty list
         mock_claude_client.get_available_models.return_value = []
-        
+
         # Call the endpoint
         model_id = "claude-sonnet-4-20250514"
         with pytest.raises(HTTPException) as exc_info:
             await get_model(model_id=model_id, claude_client=mock_claude_client)
-        
+
         # Verify exception details
         assert exc_info.value.status_code == 404
         assert exc_info.value.detail["error"]["type"] == "not_found_error"
@@ -189,30 +196,35 @@ class TestModelsAPI:
     async def test_get_model_claude_client_error(self, mock_claude_client):
         """Test individual model retrieval when Claude client raises an error."""
         # Setup mock to raise exception
-        mock_claude_client.get_available_models.side_effect = Exception("Connection timeout")
-        
+        mock_claude_client.get_available_models.side_effect = Exception(
+            "Connection timeout"
+        )
+
         # Call the endpoint and expect HTTPException
         model_id = "claude-sonnet-4-20250514"
         with pytest.raises(HTTPException) as exc_info:
             await get_model(model_id=model_id, claude_client=mock_claude_client)
-        
+
         # Verify exception details
         assert exc_info.value.status_code == 500
         assert exc_info.value.detail["type"] == "error"
         assert exc_info.value.detail["error"]["type"] == "api_error"
-        assert "Failed to retrieve model information" in exc_info.value.detail["error"]["message"]
+        assert (
+            "Failed to retrieve model information"
+            in exc_info.value.detail["error"]["message"]
+        )
 
     @pytest.mark.asyncio
     async def test_get_model_case_sensitivity(self, mock_claude_client, sample_models):
         """Test that model retrieval is case-sensitive."""
         # Setup mock
         mock_claude_client.get_available_models.return_value = sample_models
-        
+
         # Call the endpoint with different case
         model_id = "CLAUDE-3-SONNET-20240229"  # Uppercase
         with pytest.raises(HTTPException) as exc_info:
             await get_model(model_id=model_id, claude_client=mock_claude_client)
-        
+
         # Verify it's treated as not found
         assert exc_info.value.status_code == 404
         assert exc_info.value.detail["error"]["type"] == "not_found_error"
@@ -223,9 +235,9 @@ class TestModelsAPI:
             data=sample_models,
             has_more=False,
             first_id=sample_models[0].id,
-            last_id=sample_models[-1].id
+            last_id=sample_models[-1].id,
         )
-        
+
         # Test serialization
         json_data = response.model_dump()
         assert "data" in json_data
@@ -234,7 +246,7 @@ class TestModelsAPI:
         assert "last_id" in json_data
         assert len(json_data["data"]) == 5
         assert json_data["has_more"] is False
-        
+
         # Test that each model has required fields
         for model_data in json_data["data"]:
             assert "id" in model_data
@@ -247,9 +259,9 @@ class TestModelsAPI:
         model = Model(
             id="claude-sonnet-4-20250514",
             display_name="Claude 3 Sonnet",
-            created_at="2024-02-29T00:00:00Z"
+            created_at="2024-02-29T00:00:00Z",
         )
-        
+
         # Test serialization
         json_data = model.model_dump()
         assert json_data["id"] == "claude-sonnet-4-20250514"
@@ -259,11 +271,8 @@ class TestModelsAPI:
 
     def test_model_without_created_at(self):
         """Test Model creation without created_at field."""
-        model = Model(
-            id="claude-sonnet-4-20250514",
-            display_name="Claude 3 Sonnet"
-        )
-        
+        model = Model(id="claude-sonnet-4-20250514", display_name="Claude 3 Sonnet")
+
         # Test serialization
         json_data = model.model_dump()
         assert json_data["id"] == "claude-sonnet-4-20250514"
@@ -279,6 +288,7 @@ class TestModelsAPIIntegration:
     def app(self):
         """Create FastAPI app with models router for testing."""
         from fastapi import FastAPI
+
         app = FastAPI()
         app.include_router(router)
         return app
@@ -294,20 +304,20 @@ class TestModelsAPIIntegration:
         mock_claude_client = AsyncMock()
         mock_models = [
             Model(id="claude-sonnet-4-20250514", display_name="Claude 3 Sonnet"),
-            Model(id="claude-3-haiku-20240307", display_name="Claude 3 Haiku")
+            Model(id="claude-3-haiku-20240307", display_name="Claude 3 Haiku"),
         ]
         mock_claude_client.get_available_models.return_value = mock_models
-        
+
         # Override the dependency
         def get_mock_client():
             return mock_claude_client
-        
+
         app.dependency_overrides[get_claude_client] = get_mock_client
-        
+
         try:
             # Make request
             response = client.get("/v1/models")
-            
+
             # Verify response
             assert response.status_code == 200
             data = response.json()
@@ -327,20 +337,20 @@ class TestModelsAPIIntegration:
         mock_claude_client = AsyncMock()
         mock_models = [
             Model(id="claude-sonnet-4-20250514", display_name="Claude 3 Sonnet"),
-            Model(id="claude-3-haiku-20240307", display_name="Claude 3 Haiku")
+            Model(id="claude-3-haiku-20240307", display_name="Claude 3 Haiku"),
         ]
         mock_claude_client.get_available_models.return_value = mock_models
-        
+
         # Override the dependency
         def get_mock_client():
             return mock_claude_client
-        
+
         app.dependency_overrides[get_claude_client] = get_mock_client
-        
+
         try:
             # Make request
             response = client.get("/v1/models/claude-sonnet-4-20250514")
-            
+
             # Verify response
             assert response.status_code == 200
             data = response.json()
@@ -356,17 +366,17 @@ class TestModelsAPIIntegration:
         # Setup mock client
         mock_claude_client = AsyncMock()
         mock_claude_client.get_available_models.return_value = []
-        
+
         # Override the dependency
         def get_mock_client():
             return mock_claude_client
-        
+
         app.dependency_overrides[get_claude_client] = get_mock_client
-        
+
         try:
             # Make request
             response = client.get("/v1/models/non-existent-model")
-            
+
             # Verify response
             assert response.status_code == 404
             data = response.json()
@@ -382,17 +392,17 @@ class TestModelsAPIIntegration:
         # Setup mock client to raise exception
         mock_claude_client = AsyncMock()
         mock_claude_client.get_available_models.side_effect = Exception("SDK Error")
-        
+
         # Override the dependency
         def get_mock_client():
             return mock_claude_client
-        
+
         app.dependency_overrides[get_claude_client] = get_mock_client
-        
+
         try:
             # Make request
             response = client.get("/v1/models")
-            
+
             # Verify response
             assert response.status_code == 500
             data = response.json()
@@ -418,18 +428,20 @@ class TestModelMapping:
         """Test that model IDs are consistent between listing and individual retrieval."""
         sample_models = [
             Model(id="claude-sonnet-4-20250514", display_name="Claude 3 Sonnet"),
-            Model(id="claude-3-haiku-20240307", display_name="Claude 3 Haiku")
+            Model(id="claude-3-haiku-20240307", display_name="Claude 3 Haiku"),
         ]
-        
+
         # Setup mock
         mock_claude_client.get_available_models.return_value = sample_models
-        
+
         # Get models list
         models_response = await list_models(claude_client=mock_claude_client)
-        
+
         # Test individual retrieval for each model
         for model in models_response.data:
-            individual_model = await get_model(model_id=model.id, claude_client=mock_claude_client)
+            individual_model = await get_model(
+                model_id=model.id, claude_client=mock_claude_client
+            )
             assert individual_model.id == model.id
             assert individual_model.display_name == model.display_name
             assert individual_model.created_at == model.created_at
@@ -439,18 +451,18 @@ class TestModelMapping:
         model = Model(
             id="claude-sonnet-4-20250514",
             display_name="Claude 3 Sonnet",
-            created_at="2024-02-29T00:00:00Z"
+            created_at="2024-02-29T00:00:00Z",
         )
-        
+
         # Verify required fields
         assert model.id is not None
         assert model.type == "model"
         assert model.display_name is not None
-        
+
         # Verify ID format (should match Anthropic's naming convention)
         assert model.id.startswith("claude-")
         assert "-" in model.id  # Should contain hyphens
-        
+
         # Verify serialization matches expected format
         json_data = model.model_dump()
         expected_fields = {"id", "type", "display_name", "created_at"}

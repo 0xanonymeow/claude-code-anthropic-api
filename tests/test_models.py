@@ -50,7 +50,7 @@ class TestContentBlock:
         source = ImageSource(
             type="base64",
             media_type="image/jpeg",
-            data="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+            data="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
         )
         block = ContentBlock(type=ContentType.IMAGE, source=source)
         assert block.type == ContentType.IMAGE
@@ -71,22 +71,14 @@ class TestContentBlock:
 
     def test_text_content_block_with_source_invalid(self):
         """Test text content block with source field fails validation."""
-        source = ImageSource(
-            type="base64",
-            media_type="image/jpeg", 
-            data="test_data"
-        )
+        source = ImageSource(type="base64", media_type="image/jpeg", data="test_data")
         with pytest.raises(ValidationError) as exc_info:
             ContentBlock(type=ContentType.TEXT, text="Hello", source=source)
         assert "Text content blocks cannot have 'source' field" in str(exc_info.value)
 
     def test_image_content_block_with_text_invalid(self):
         """Test image content block with text field fails validation."""
-        source = ImageSource(
-            type="base64",
-            media_type="image/jpeg",
-            data="test_data"
-        )
+        source = ImageSource(type="base64", media_type="image/jpeg", data="test_data")
         with pytest.raises(ValidationError) as exc_info:
             ContentBlock(type=ContentType.IMAGE, text="Hello", source=source)
         assert "Image content blocks cannot have 'text' field" in str(exc_info.value)
@@ -100,7 +92,7 @@ class TestImageSource:
         source = ImageSource(
             type="base64",
             media_type="image/png",
-            data="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+            data="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
         )
         assert source.type == "base64"
         assert source.media_type == "image/png"
@@ -110,9 +102,7 @@ class TestImageSource:
         """Test invalid media type fails validation."""
         with pytest.raises(ValidationError) as exc_info:
             ImageSource(
-                type="base64",
-                media_type="image/bmp",  # Not supported
-                data="test_data"
+                type="base64", media_type="image/bmp", data="test_data"  # Not supported
             )
         assert "Unsupported media type" in str(exc_info.value)
 
@@ -120,11 +110,7 @@ class TestImageSource:
         """Test all valid media types are accepted."""
         valid_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
         for media_type in valid_types:
-            source = ImageSource(
-                type="base64",
-                media_type=media_type,
-                data="test_data"
-            )
+            source = ImageSource(type="base64", media_type=media_type, data="test_data")
             assert source.media_type == media_type
 
 
@@ -144,7 +130,7 @@ class TestMessage:
         """Test message with ContentBlock list."""
         blocks = [
             ContentBlock(type=ContentType.TEXT, text="Hello!"),
-            ContentBlock(type=ContentType.TEXT, text="How are you?")
+            ContentBlock(type=ContentType.TEXT, text="How are you?"),
         ]
         message = Message(role=MessageRole.ASSISTANT, content=blocks)
         assert message.role == MessageRole.ASSISTANT
@@ -165,7 +151,7 @@ class TestUsage:
         """Test negative token counts fail validation."""
         with pytest.raises(ValidationError):
             Usage(input_tokens=-1, output_tokens=20)
-        
+
         with pytest.raises(ValidationError):
             Usage(input_tokens=10, output_tokens=-1)
 
@@ -178,7 +164,7 @@ class TestMessageRequest:
         messages = [
             Message(role=MessageRole.USER, content="Hello!"),
             Message(role=MessageRole.ASSISTANT, content="Hi there!"),
-            Message(role=MessageRole.USER, content="How are you?")
+            Message(role=MessageRole.USER, content="How are you?"),
         ]
         request = MessageRequest(
             model="claude-sonnet-4-20250514",
@@ -189,9 +175,9 @@ class TestMessageRequest:
             top_k=40,
             stop_sequences=["Human:", "Assistant:"],
             stream=False,
-            system="You are a helpful assistant."
+            system="You are a helpful assistant.",
         )
-        
+
         assert request.model == "claude-sonnet-4-20250514"
         assert len(request.messages) == 3
         assert request.max_tokens == 100
@@ -206,22 +192,16 @@ class TestMessageRequest:
         """Test empty messages list fails validation."""
         with pytest.raises(ValidationError) as exc_info:
             MessageRequest(
-                model="claude-sonnet-4-20250514",
-                messages=[],
-                max_tokens=100
+                model="claude-sonnet-4-20250514", messages=[], max_tokens=100
             )
         assert "List should have at least 1 item" in str(exc_info.value)
 
     def test_first_message_not_user_invalid(self):
         """Test first message not from user fails validation."""
-        messages = [
-            Message(role=MessageRole.ASSISTANT, content="Hello!")
-        ]
+        messages = [Message(role=MessageRole.ASSISTANT, content="Hello!")]
         with pytest.raises(ValidationError) as exc_info:
             MessageRequest(
-                model="claude-sonnet-4-20250514",
-                messages=messages,
-                max_tokens=100
+                model="claude-sonnet-4-20250514", messages=messages, max_tokens=100
             )
         assert "First message must be from user" in str(exc_info.value)
 
@@ -229,61 +209,64 @@ class TestMessageRequest:
         """Test consecutive messages from same role fail validation."""
         messages = [
             Message(role=MessageRole.USER, content="Hello!"),
-            Message(role=MessageRole.USER, content="How are you?")  # Consecutive user messages
+            Message(
+                role=MessageRole.USER, content="How are you?"
+            ),  # Consecutive user messages
         ]
         with pytest.raises(ValidationError) as exc_info:
             MessageRequest(
-                model="claude-sonnet-4-20250514",
-                messages=messages,
-                max_tokens=100
+                model="claude-sonnet-4-20250514", messages=messages, max_tokens=100
             )
-        assert "Messages must alternate between user and assistant roles" in str(exc_info.value)
+        assert "Messages must alternate between user and assistant roles" in str(
+            exc_info.value
+        )
 
     def test_parameter_validation(self):
         """Test parameter range validation."""
         messages = [Message(role=MessageRole.USER, content="Hello!")]
-        
+
         # Test max_tokens validation
         with pytest.raises(ValidationError):
             MessageRequest(model="test", messages=messages, max_tokens=0)
-        
+
         with pytest.raises(ValidationError):
             MessageRequest(model="test", messages=messages, max_tokens=5000)
-        
+
         # Test temperature validation
         with pytest.raises(ValidationError):
-            MessageRequest(model="test", messages=messages, max_tokens=100, temperature=-0.1)
-        
+            MessageRequest(
+                model="test", messages=messages, max_tokens=100, temperature=-0.1
+            )
+
         with pytest.raises(ValidationError):
-            MessageRequest(model="test", messages=messages, max_tokens=100, temperature=2.1)
-        
+            MessageRequest(
+                model="test", messages=messages, max_tokens=100, temperature=2.1
+            )
+
         # Test top_p validation
         with pytest.raises(ValidationError):
             MessageRequest(model="test", messages=messages, max_tokens=100, top_p=-0.1)
-        
+
         with pytest.raises(ValidationError):
             MessageRequest(model="test", messages=messages, max_tokens=100, top_p=1.1)
 
     def test_stop_sequences_validation(self):
         """Test stop sequences validation."""
         messages = [Message(role=MessageRole.USER, content="Hello!")]
-        
+
         # Test too many stop sequences
         with pytest.raises(ValidationError):
             MessageRequest(
                 model="test",
                 messages=messages,
                 max_tokens=100,
-                stop_sequences=["a", "b", "c", "d", "e"]  # More than 4
+                stop_sequences=["a", "b", "c", "d", "e"],  # More than 4
             )
-        
+
         # Test empty stop sequence
         with pytest.raises(ValidationError) as exc_info:
             MessageRequest(
-                model="test",
-                messages=messages,
-                max_tokens=100,
-                stop_sequences=[""]
+                model="test", messages=messages, max_tokens=100, stop_sequences=[""]
             )
         assert "Stop sequences cannot be empty" in str(exc_info.value)
 
@@ -295,16 +278,16 @@ class TestMessageResponse:
         """Test valid message response creation."""
         content = [ContentBlock(type=ContentType.TEXT, text="Hello there!")]
         usage = Usage(input_tokens=10, output_tokens=15)
-        
+
         response = MessageResponse(
             id="msg_123",
             content=content,
             model="claude-sonnet-4-20250514",
             stop_reason=StopReason.END_TURN,
             stop_sequence=None,
-            usage=usage
+            usage=usage,
         )
-        
+
         assert response.id == "msg_123"
         assert response.type == "message"
         assert response.role == "assistant"
@@ -316,13 +299,10 @@ class TestMessageResponse:
     def test_empty_content_invalid(self):
         """Test empty content fails validation."""
         usage = Usage(input_tokens=10, output_tokens=15)
-        
+
         with pytest.raises(ValidationError) as exc_info:
             MessageResponse(
-                id="msg_123",
-                content=[],
-                model="claude-sonnet-4-20250514",
-                usage=usage
+                id="msg_123", content=[], model="claude-sonnet-4-20250514", usage=usage
             )
         assert "List should have at least 1 item" in str(exc_info.value)
 
@@ -335,12 +315,9 @@ class TestStreamingEvents:
         content = [ContentBlock(type=ContentType.TEXT, text="Hello!")]
         usage = Usage(input_tokens=10, output_tokens=0)
         message = MessageResponse(
-            id="msg_123",
-            content=content,
-            model="claude-sonnet-4-20250514",
-            usage=usage
+            id="msg_123", content=content, model="claude-sonnet-4-20250514", usage=usage
         )
-        
+
         event = MessageStartEvent(message=message)
         assert event.type == "message_start"
         assert event.message == message
@@ -391,8 +368,7 @@ class TestErrorModels:
     def test_anthropic_error(self):
         """Test AnthropicError creation."""
         error = AnthropicError(
-            type=ErrorType.INVALID_REQUEST_ERROR,
-            message="Invalid request format"
+            type=ErrorType.INVALID_REQUEST_ERROR, message="Invalid request format"
         )
         assert error.type == ErrorType.INVALID_REQUEST_ERROR
         assert error.message == "Invalid request format"
@@ -400,8 +376,7 @@ class TestErrorModels:
     def test_error_response(self):
         """Test ErrorResponse creation."""
         error = AnthropicError(
-            type=ErrorType.API_ERROR,
-            message="Internal server error"
+            type=ErrorType.API_ERROR, message="Internal server error"
         )
         response = ErrorResponse(error=error)
         assert response.type == "error"
@@ -416,7 +391,7 @@ class TestModelModels:
         model = Model(
             id="claude-sonnet-4-20250514",
             display_name="Claude 3 Sonnet",
-            created_at="2024-02-29T00:00:00Z"
+            created_at="2024-02-29T00:00:00Z",
         )
         assert model.id == "claude-sonnet-4-20250514"
         assert model.type == "model"
@@ -427,13 +402,13 @@ class TestModelModels:
         """Test ModelsResponse creation."""
         models = [
             Model(id="claude-sonnet-4-20250514", display_name="Claude 3 Sonnet"),
-            Model(id="claude-3-haiku-20240307", display_name="Claude 3 Haiku")
+            Model(id="claude-3-haiku-20240307", display_name="Claude 3 Haiku"),
         ]
         response = ModelsResponse(
             data=models,
             has_more=False,
             first_id="claude-sonnet-4-20250514",
-            last_id="claude-3-haiku-20240307"
+            last_id="claude-3-haiku-20240307",
         )
         assert response.data == models
         assert response.has_more is False
@@ -451,15 +426,15 @@ class TestModelSerialization:
             model="claude-sonnet-4-20250514",
             messages=messages,
             max_tokens=100,
-            temperature=0.7
+            temperature=0.7,
         )
-        
+
         # Test serialization
         json_data = request.model_dump()
         assert json_data["model"] == "claude-sonnet-4-20250514"
         assert json_data["max_tokens"] == 100
         assert json_data["temperature"] == 0.7
-        
+
         # Test deserialization
         new_request = MessageRequest.model_validate(json_data)
         assert new_request.model == request.model
@@ -471,18 +446,15 @@ class TestModelSerialization:
         content = [ContentBlock(type=ContentType.TEXT, text="Hello there!")]
         usage = Usage(input_tokens=10, output_tokens=15)
         response = MessageResponse(
-            id="msg_123",
-            content=content,
-            model="claude-sonnet-4-20250514",
-            usage=usage
+            id="msg_123", content=content, model="claude-sonnet-4-20250514", usage=usage
         )
-        
+
         # Test serialization
         json_data = response.model_dump()
         assert json_data["id"] == "msg_123"
         assert json_data["type"] == "message"
         assert json_data["role"] == "assistant"
-        
+
         # Test deserialization
         new_response = MessageResponse.model_validate(json_data)
         assert new_response.id == response.id
